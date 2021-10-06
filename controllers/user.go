@@ -14,19 +14,20 @@ type UserController struct {
 	session *mgo.Session
 }
 
-func NewUserController (s *mgo.Session) *UserController {
+func NewUserController(s *mgo.Session) *UserController {
 	return &UserController{s}
 }
+
 // UC receives struct method , which we access in oid
-func (uc UserController) GetUser (w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	id := p.ByName("Id")
+func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	id := p.ByName("id")
 	if !bson.IsObjectIdHex(id) {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
-	oid := bson.NewObjectId()
+	oid := bson.ObjectIdHex(id)
 
-	u := models.User {}
+	u := models.User{}
 
 	if err := uc.session.DB("mongo-golang").C("users").FindId(oid).One(&u); err != nil {
 		w.WriteHeader(404)
@@ -42,10 +43,9 @@ func (uc UserController) GetUser (w http.ResponseWriter, r *http.Request, p http
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "%s\n", uj)
 
-
 }
 
-func (uc UserController) CreateUser (w http.ResponseWriter, r *http.Request,p httprouter.Params) {
+func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	u := models.User{}
 
 	json.NewDecoder(r.Body).Decode(&u)
