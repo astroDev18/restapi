@@ -1,4 +1,4 @@
-package controllers
+package main
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
-	"restapi/models"
 )
 
 type UserController struct {
@@ -18,17 +17,19 @@ func NewUserController(s *mgo.Session) *UserController {
 	return &UserController{s}
 }
 
-// UC receives struct method , which we access in oid
+// Get User is a struct method, that takes three params
+
 func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	id := p.ByName("id")
+	// Check if id is a HEX
 	if !bson.IsObjectIdHex(id) {
 		w.WriteHeader(http.StatusNotFound)
 	}
-
+	// Save id
 	oid := bson.ObjectIdHex(id)
 
-	u := models.User{}
-
+	u := User{}
+	// Search mongoDB for the data
 	if err := uc.session.DB("mongo-golang").C("users").FindId(oid).One(&u); err != nil {
 		w.WriteHeader(404)
 		return
@@ -46,7 +47,7 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
 }
 
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	u := models.User{}
+	u := User{}
 
 	json.NewDecoder(r.Body).Decode(&u)
 	u.Id = bson.NewObjectId()
